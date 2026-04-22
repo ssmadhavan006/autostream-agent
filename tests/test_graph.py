@@ -309,16 +309,16 @@ class TestCaptureLeadNode:
         assert last["role"] == "assistant"
         assert "Carol" in last["content"]
 
-    def test_returns_empty_on_missing_field(self):
+    def test_raises_assertion_on_missing_field(self):
+        """Guard assertion fires when name is empty — this is the correct behaviour."""
         state = _state_with_message(
             "",
             lead_info=LeadInfo(name="", email="x@y.com", platform="TikTok"),
             session_id="test-capture-003",
         )
-        updates = capture_lead_node(state)
-        # Should fail validation and return {} without crashing
-        assert isinstance(updates, dict)
-        assert not updates.get("lead_captured")
+        # Phase 4: capture_lead_node raises AssertionError when fields are incomplete
+        with pytest.raises(AssertionError, match="prematurely"):
+            capture_lead_node(state)
 
 
 # ─── Router functions ─────────────────────────────────────────────────────────

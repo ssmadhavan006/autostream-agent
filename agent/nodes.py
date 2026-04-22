@@ -22,9 +22,13 @@ import json
 import re
 from typing import Any, Dict, List, Optional
 
+import logging
+
 from agent.intent import Intent, IntentResult, apply_transition_rules, classify_intent
 from agent.state import AgentState, LeadInfo
-from agent.tools import mock_lead_capture
+from agent.tools import mock_lead_capture, validate_email
+
+logger = logging.getLogger(__name__)
 from config.settings import (
     ANTHROPIC_API_KEY,
     INTENT_MIN_CONFIDENCE,
@@ -316,6 +320,14 @@ def _next_missing_field(lead_info: LeadInfo) -> Optional[str]:
     return None
 
 
+# Email-invalid re-ask prompt injected into generate_response_node via awaiting_field
+_INVALID_EMAIL_PROMPT = (
+    "Hmm, that email doesn't look quite right! 😊 "
+    "Could you double-check and share a valid email address? "
+    "(e.g. yourname@example.com)"
+)
+
+
 def collect_lead_node(state: AgentState) -> dict:
     """Extract lead fields from the user's message and advance the collection sequence.
 
@@ -323,10 +335,14 @@ def collect_lead_node(state: AgentState) -> dict:
     field Y (e.g., gave their name when asked for email), we capture Y and
     re-evaluate which field to ask for next.
 
+    Email validation: if an email is extracted but fails format validation,
+    the agent re-asks for a valid email instead of storing a bad address.
+
     Updates: lead_info, awaiting_field
     """
     message = _latest_user_message(state)
     lead_info: LeadInfo = dict(state["lead_info"])   # mutable copy
+    messages = list(state["messages"])
 
     # Try fast regex first, fall back to LLM if API key available
     if ANTHROPIC_API_KEY:
@@ -334,12 +350,26 @@ def collect_lead_node(state: AgentState) -> dict:
     else:
         extracted = _extract_fields_regex(message)
 
-    # Merge extracted values into lead_info (only fill gaps, never overwrite)
-    changed = False
+    # ── Email validation guard ────────────────────────────────────────────────
+    # If an email was extracted but is invalid, reject it and re-ask.
+    if extracted.get("email") and not validate_email(extracted["email"]):
+        print(
+            f"[nodes] collect_lead: invalid email rejected: {extracted['email']!r}"
+        )
+        logger.warning("Invalid email submitted: %r — asking again.", extracted["email"])
+        extracted["email"] = None   # discard bad value
+        # Inject polite re-ask as the next assistant message
+        messages.append({"role": "assistant", "content": _INVALID_EMAIL_PROMPT})
+        return {
+            "messages": messages,
+            "lead_info": lead_info,
+            "awaiting_field": "email",  # stay on email
+        }
+
+    # ── Merge extracted values into lead_info (only fill gaps, never overwrite) ─
     for field in _FIELD_ORDER:
         if extracted.get(field) and not lead_info.get(field):
             lead_info[field] = extracted[field]
-            changed = True
 
     # Determine which field to ask for next
     next_field = _next_missing_field(lead_info)
@@ -350,6 +380,7 @@ def collect_lead_node(state: AgentState) -> dict:
     )
 
     return {
+        "messages": messages,
         "lead_info": lead_info,
         "awaiting_field": next_field,
     }
@@ -360,24 +391,52 @@ def collect_lead_node(state: AgentState) -> dict:
 def capture_lead_node(state: AgentState) -> dict:
     """Call mock_lead_capture when all 3 lead fields are filled.
 
+    Safety contract
+    ---------------
+    Before invoking the tool, this node asserts that ALL three required fields
+    are present and non-empty. If the assertion fires it means a routing bug
+    reached capture_lead_node prematurely — this is logged as a critical warning
+    so it is immediately visible in monitoring.
+
     On success: sets lead_captured=True and injects a warm success message.
     On failure: logs the error and lets the conversation continue gracefully.
     """
     lead = state["lead_info"]
     messages = list(state["messages"])
 
+    # ── Guard assertion — deliberate, visible safety check ───────────────────
+    all_fields_present = all([
+        lead.get("name"),
+        lead.get("email"),
+        lead.get("platform"),
+    ])
+    if not all_fields_present:
+        logger.warning(
+            "[capture_lead_node] GUARD FIRED — tool called prematurely! "
+            "lead_info=%s  awaiting_field=%s",
+            lead, state.get("awaiting_field"),
+        )
+        print(
+            "[nodes] WARNING: capture_lead_node called with incomplete lead_info. "
+            f"lead={lead}"
+        )
+    assert all_fields_present, (
+        "Tool called prematurely — all fields must be collected first. "
+        f"Missing: {[f for f in ('name','email','platform') if not lead.get(f)]}"
+    )
+
     try:
         result = mock_lead_capture(
             name=lead["name"],
             email=lead["email"],
             platform=lead["platform"],
-            session_id=state["session_id"],
         )
+        # result is now a plain dict: {status, lead_id, message}
         success_msg = (
             f"🎉 You're all set, {lead['name']}! "
-            f"I've passed your details to our team — "
+            f"I've passed your details to our team (ref: {result['lead_id']}) — "
             f"expect a welcome email at {lead['email']} very soon. "
-            f"In the meantime, is there anything else about AutoStream I can help you with?"
+            f"Is there anything else about AutoStream I can help you with?"
         )
         messages.append({"role": "assistant", "content": success_msg})
         return {
@@ -387,8 +446,10 @@ def capture_lead_node(state: AgentState) -> dict:
         }
 
     except ValueError as exc:
+        logger.error("[capture_lead_node] Validation error: %s", exc)
         print(f"[nodes] Lead capture validation error: {exc}")
         return {}   # Continue without marking captured; let generate_response handle it
     except Exception as exc:
+        logger.exception("[capture_lead_node] Unexpected error: %s", exc)
         print(f"[nodes] Lead capture unexpected error: {exc}")
         return {}
