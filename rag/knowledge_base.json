@@ -1,0 +1,92 @@
+[
+  {
+    "id": "overview_001",
+    "category": "Product Overview",
+    "title": "What is AutoStream?",
+    "content": "AutoStream is a cloud-based video streaming and content management platform designed for content creators, educators, and businesses. It enables users to upload, host, manage, and stream videos to audiences worldwide with professional-grade quality. AutoStream also offers AI-powered tools to help creators grow faster."
+  },
+  {
+    "id": "pricing_basic_001",
+    "category": "Pricing",
+    "title": "Basic Plan",
+    "content": "The Basic Plan costs $29 per month. It allows up to 10 video uploads per month at a maximum resolution of 720p HD. Storage is 50 GB and bandwidth is 200 GB per month. It includes basic analytics (view counts and watch time), email support with a 48-hour response time, and 1 seat for solo creators. AI captions and 4K streaming are not available on the Basic Plan."
+  },
+  {
+    "id": "pricing_pro_001",
+    "category": "Pricing",
+    "title": "Pro Plan",
+    "content": "The Pro Plan costs $79 per month. It includes unlimited video uploads per month at up to 4K Ultra HD resolution. Storage is 500 GB and bandwidth is unlimited. It includes advanced analytics, 24/7 priority support via live chat and phone, AI automatic caption generation in 30+ languages, a custom domain, and up to 5 team seats. Live streaming and ad-free viewing are also included."
+  },
+  {
+    "id": "pricing_comparison_001",
+    "category": "Pricing",
+    "title": "Plan Comparison: Basic vs Pro",
+    "content": "Basic Plan is $29/month with 10 video uploads, 720p max resolution, 50 GB storage, email support, and no AI captions or 4K. Pro Plan is $79/month with unlimited uploads, 4K resolution, 500 GB storage, 24/7 priority support, AI captions, custom domain, and live streaming."
+  },
+  {
+    "id": "refund_001",
+    "category": "Refund Policy",
+    "title": "Refund and Money-Back Guarantee",
+    "content": "AutoStream offers a 7-day money-back guarantee for new subscribers. Refund requests submitted within 7 days of initial subscription will be honored in full. No refunds are issued after 7 days from the subscription start date. Refunds do not apply to partial months, mid-cycle downgrades, or add-on purchases. To request a refund, contact billing@autostream.io. Refunds are processed within 5-10 business days."
+  },
+  {
+    "id": "support_basic_001",
+    "category": "Support Policy",
+    "title": "Basic Plan Support",
+    "content": "Basic Plan subscribers receive email support only with a response time of within 48 hours on business days. They also have access to the AutoStream Help Center and documentation. 24/7 live chat and phone support are not available on the Basic Plan."
+  },
+  {
+    "id": "support_pro_001",
+    "category": "Support Policy",
+    "title": "Pro Plan Support",
+    "content": "Pro Plan subscribers receive 24/7 priority support via live chat and phone. The average live chat response time is under 5 minutes. New Pro subscribers also get a dedicated onboarding session. Pro support includes full access to the Help Center, documentation, and video tutorials."
+  },
+  {
+    "id": "faq_001",
+    "category": "FAQ",
+    "title": "Can I upload videos longer than 2 hours on the Basic Plan?",
+    "content": "Yes, the Basic Plan does not impose a per-video length limit. However, each video counts toward your 10-video monthly upload limit, and your total storage is capped at 50 GB."
+  },
+  {
+    "id": "faq_002",
+    "category": "FAQ",
+    "title": "What happens if I exceed my monthly video upload limit on the Basic Plan?",
+    "content": "If you hit your 10-video upload limit on Basic, you will not be able to upload additional videos until the next billing cycle begins, or until you upgrade to the Pro Plan, which has unlimited uploads."
+  },
+  {
+    "id": "faq_003",
+    "category": "FAQ",
+    "title": "Does AutoStream support 4K video streaming?",
+    "content": "4K Ultra HD streaming is exclusively available on the Pro Plan at $79/month. The Basic Plan supports video up to 720p HD resolution. If you upload a 4K video on the Basic Plan, it will be automatically downscaled to 720p."
+  },
+  {
+    "id": "faq_004",
+    "category": "FAQ",
+    "title": "How does the AI captions feature work on the Pro Plan?",
+    "content": "On the Pro Plan, AutoStream automatically generates captions for your videos using AI. Captions are available in 30+ languages and can be edited within the platform. They are ready within minutes of video upload and can be toggled on or off by viewers."
+  },
+  {
+    "id": "faq_005",
+    "category": "FAQ",
+    "title": "Can I upgrade from Basic to Pro mid-month?",
+    "content": "Yes, you can upgrade at any time. When you upgrade mid-cycle, you will be charged a prorated amount for the remaining days in your billing cycle. Your account will immediately reflect all Pro Plan features upon upgrade."
+  },
+  {
+    "id": "faq_006",
+    "category": "FAQ",
+    "title": "Is there a free trial available?",
+    "content": "AutoStream does not currently offer a free trial. However, all new subscriptions come with a 7-day money-back guarantee, which gives you risk-free access to try the platform fully."
+  },
+  {
+    "id": "faq_007",
+    "category": "FAQ",
+    "title": "Can I host live streams on AutoStream?",
+    "content": "Live streaming is a feature available exclusively to Pro Plan subscribers. It supports streams up to 4K resolution and includes a live chat overlay for audience engagement. Basic Plan subscribers cannot host live streams."
+  },
+  {
+    "id": "faq_008",
+    "category": "FAQ",
+    "title": "How do I cancel my AutoStream subscription?",
+    "content": "You can cancel your subscription at any time from your Account Settings under the Billing section. After cancellation, your account remains active until the end of the current billing period. AutoStream does not offer refunds for cancellations made after the 7-day money-back window."
+  }
+]
