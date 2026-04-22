@@ -1,0 +1,10 @@
+langchain==0.2.x
+langchain-anthropic==0.1.x
+langchain-community==0.2.x
+langgraph==0.1.x
+faiss-cpu==1.8.x
+sentence-transformers==3.x
+rich==13.x
+python-dotenv==1.x
+pydantic==2.x
+pytest==8.x

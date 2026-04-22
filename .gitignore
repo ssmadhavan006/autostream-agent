@@ -1,0 +1,17 @@
+# Environments
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# Vector Store
+faiss_index/
+
+# Application Data
+transcripts/
