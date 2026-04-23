@@ -118,7 +118,7 @@ class TestClassifyIntentNode:
 
     def test_fallback_when_no_api_key(self):
         state = _state_with_message("Tell me about pricing")
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes.classify_intent",
                    side_effect=EnvironmentError("No key")):
             updates = classify_intent_node(state)
@@ -204,14 +204,14 @@ class TestGenerateResponseNode:
 
     def test_llm_called_for_greeting(self):
         state = _state_with_message("Hello!", intent=Intent.GREETING)
-        with patch("agent.nodes.ANTHROPIC_API_KEY", "fake-key"), \
+        with patch("agent.llm_factory.is_llm_available", return_value=True), \
              patch("agent.nodes._llm", return_value="Hi there! I'm Aria."):
             updates = generate_response_node(state)
         assert "Aria" in updates["messages"][-1]["content"]
 
     def test_no_api_key_returns_demo_message(self):
         state = _state_with_message("Hello!", intent=Intent.GREETING)
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""):
+        with patch("agent.llm_factory.is_llm_available", return_value=False):
             updates = generate_response_node(state)
         assert updates["messages"][-1]["role"] == "assistant"
         assert "demo" in updates["messages"][-1]["content"].lower()
@@ -226,7 +226,7 @@ class TestCollectLeadNode:
             intent=Intent.HIGH_INTENT_LEAD,
             awaiting_field="email",
         )
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes._extract_fields_llm",
                    return_value={"name": None, "email": "alice@example.com", "platform": None}):
             updates = collect_lead_node(state)
@@ -239,7 +239,7 @@ class TestCollectLeadNode:
             intent=Intent.HIGH_INTENT_LEAD,
             awaiting_field="email",
         )
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes._extract_fields_llm",
                    return_value={"name": "Arjun", "email": None, "platform": None}):
             updates = collect_lead_node(state)
@@ -407,7 +407,7 @@ class TestSixTurnSimulation:
              patch("agent.nodes.get_vectorstore"), \
              patch("agent.nodes.retrieve",
                    return_value=NoInfoSignal(query=user_msg)), \
-             patch("agent.nodes.ANTHROPIC_API_KEY", "fake-key"), \
+             patch("agent.llm_factory.is_llm_available", return_value=True), \
              patch("agent.nodes._llm", return_value="Mocked Aria reply"), \
              patch("agent.nodes._extract_fields_llm",
                    side_effect=lambda msg, _: _extract_fields_regex(msg)):

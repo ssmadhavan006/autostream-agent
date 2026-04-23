@@ -78,7 +78,7 @@ def _run_turn(
         patch("agent.nodes.classify_intent", return_value=_mock_ir(mock_intent)),
         patch("agent.nodes.get_vectorstore"),
         patch("agent.nodes.retrieve", return_value=NoInfoSignal(query=user_msg)),
-        patch("agent.nodes.ANTHROPIC_API_KEY", "fake-key-for-tests"),
+        patch("agent.llm_factory.is_llm_available", return_value=True),
         patch("agent.nodes._llm", return_value=llm_reply),
         patch("agent.nodes._extract_fields_llm", side_effect=field_extractor),
         patch("agent.nodes._extract_fields_regex", side_effect=regex_extractor),
@@ -343,7 +343,7 @@ class TestEdgeCases:
             patch("agent.nodes.classify_intent", return_value=real_off_topic),
             patch("agent.nodes.get_vectorstore"),
             patch("agent.nodes.retrieve", return_value=NoInfoSignal(query="weather")),
-            patch("agent.nodes.ANTHROPIC_API_KEY", "fake-key"),
+            patch("agent.llm_factory.is_llm_available", return_value=True),
             patch("agent.nodes._llm", return_value="Still collecting lead fields."),
             patch("agent.nodes._extract_fields_llm",
                   return_value={"name": None, "email": None, "platform": None}),
@@ -378,7 +378,7 @@ class TestEdgeCases:
         state["messages"] = [{"role": "user", "content": "my email is priya-at-gmail"}]
 
         with (
-            patch("agent.nodes.ANTHROPIC_API_KEY", ""),
+            patch("agent.llm_factory.is_llm_available", return_value=False),
             patch("agent.nodes._extract_fields_regex",
                   return_value={"name": None, "email": "priya-at-gmail", "platform": None}),
         ):
@@ -409,7 +409,7 @@ class TestEdgeCases:
         state["messages"] = [{"role": "user", "content": "not-valid"}]
 
         with (
-            patch("agent.nodes.ANTHROPIC_API_KEY", ""),
+            patch("agent.llm_factory.is_llm_available", return_value=False),
             patch("agent.nodes._extract_fields_regex",
                   return_value={"name": None, "email": "not-valid", "platform": None}),
         ):
@@ -430,7 +430,7 @@ class TestEdgeCases:
         state["messages"] = [{"role": "user", "content": "priya@email.com"}]
 
         with (
-            patch("agent.nodes.ANTHROPIC_API_KEY", ""),
+            patch("agent.llm_factory.is_llm_available", return_value=False),
             patch("agent.nodes._extract_fields_regex",
                   return_value={"name": None, "email": "priya@email.com", "platform": None}),
         ):

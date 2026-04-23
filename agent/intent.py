@@ -26,6 +26,7 @@ from config.settings import (
     INTENT_CLASSIFIER_TEMPERATURE,
     INTENT_CONTEXT_TURNS,
     INTENT_MIN_CONFIDENCE,
+    LLM_BACKEND,
     LLM_MODEL,
 )
 
@@ -112,21 +113,18 @@ def _build_user_prompt(
 # ─── LLM call ─────────────────────────────────────────────────────────────────
 
 def _call_llm(system: str, user: str) -> str:
-    """Call Claude and return the raw text response.
+    """Call the configured LLM backend and return the raw text response.
 
-    Lazy-imports langchain_anthropic so the module can be imported and tested
-    without crashing when no API key is present.
+    Uses the factory so the same backend switch (LLM_BACKEND env var) that
+    controls response generation also controls intent classification.
     """
-    from langchain_anthropic import ChatAnthropic
+    from agent.llm_factory import get_chat_model
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    llm = ChatAnthropic(
-        model=LLM_MODEL,
-        api_key=ANTHROPIC_API_KEY,
+    llm = get_chat_model(
         temperature=INTENT_CLASSIFIER_TEMPERATURE,
         max_tokens=256,
     )
-
     response = llm.invoke([
         SystemMessage(content=system),
         HumanMessage(content=user),
@@ -230,10 +228,11 @@ def classify_intent(
         EnvironmentError: If ANTHROPIC_API_KEY is not set.
         ValueError:       If the LLM returns an unparseable response.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ANTHROPIC_API_KEY and LLM_BACKEND == "anthropic":
         raise EnvironmentError(
             "ANTHROPIC_API_KEY is not set. "
-            "Copy .env.example to .env and add your Anthropic API key."
+            "Either add your key to .env, or switch to Ollama by setting "
+            "LLM_BACKEND=ollama in your .env file."
         )
 
     history = history or []

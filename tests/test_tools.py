@@ -319,7 +319,7 @@ class TestEmailReAskFlow:
             user_msg="my email is not-valid-email",
         )
 
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes._extract_fields_regex",
                    return_value={"name": None, "email": "not-valid-email", "platform": None}):
             updates = collect_lead_node(state)
@@ -341,7 +341,7 @@ class TestEmailReAskFlow:
             user_msg="bob@example.com",
         )
 
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes._extract_fields_regex",
                    return_value={"name": None, "email": "bob@example.com", "platform": None}):
             updates = collect_lead_node(state)
@@ -357,7 +357,7 @@ class TestEmailReAskFlow:
             user_msg="carol at gmail",
         )
 
-        with patch("agent.nodes.ANTHROPIC_API_KEY", ""), \
+        with patch("agent.llm_factory.is_llm_available", return_value=False), \
              patch("agent.nodes._extract_fields_regex",
                    return_value={"name": None, "email": "carol at gmail", "platform": None}):
             updates = collect_lead_node(state)

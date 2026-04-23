@@ -15,9 +15,20 @@ from dotenv import load_dotenv
 _env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=_env_path, override=False)
 
-# ─── LLM & Embedding Models ───────────────────────────────────────────────────
+# ─── LLM Backend ──────────────────────────────────────────────────────────────
+# "anthropic" (default, requires ANTHROPIC_API_KEY)
+# "ollama"    (free — uses a locally-running or cloud-routed Ollama model)
+LLM_BACKEND: str = os.getenv("LLM_BACKEND", "anthropic")
+
+# ─── Anthropic settings (used when LLM_BACKEND=anthropic) ─────────────────────
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 LLM_MODEL: str = os.getenv("LLM_MODEL", "claude-3-haiku-20240307")
+
+# ─── Ollama settings (used when LLM_BACKEND=ollama) ───────────────────────────
+OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "kimi-k2.6:cloud")
+
+# ─── Shared / Embedding ───────────────────────────────────────────────────────
 EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
 # ─── Intent Classifier Settings ───────────────────────────────────────────────

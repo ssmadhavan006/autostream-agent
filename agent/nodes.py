@@ -25,14 +25,13 @@ from typing import Any, Dict, List, Optional
 import logging
 
 from agent.intent import Intent, IntentResult, apply_transition_rules, classify_intent
+from agent.llm_factory import get_chat_model, is_llm_available
 from agent.state import AgentState, LeadInfo
 from agent.tools import mock_lead_capture, validate_email
 
 logger = logging.getLogger(__name__)
 from config.settings import (
-    ANTHROPIC_API_KEY,
     INTENT_MIN_CONFIDENCE,
-    LLM_MODEL,
     RAG_TOP_K,
 )
 from rag.retriever import NoInfoSignal, get_vectorstore, retrieve
@@ -40,16 +39,10 @@ from rag.retriever import NoInfoSignal, get_vectorstore, retrieve
 # ─── Shared LLM helper ────────────────────────────────────────────────────────
 
 def _llm(system: str, user: str, max_tokens: int = 512) -> str:
-    """Make a synchronous Claude call and return the text content."""
-    from langchain_anthropic import ChatAnthropic
+    """Call the configured LLM backend (Anthropic or Ollama) and return text."""
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    llm = ChatAnthropic(
-        model=LLM_MODEL,
-        api_key=ANTHROPIC_API_KEY,
-        temperature=0.4,
-        max_tokens=max_tokens,
-    )
+    llm = get_chat_model(temperature=0.4, max_tokens=max_tokens)
     response = llm.invoke([
         SystemMessage(content=system),
         HumanMessage(content=user),
@@ -230,10 +223,10 @@ def generate_response_node(state: AgentState) -> dict:
         )
     else:
         # Full Aria response
-        if not ANTHROPIC_API_KEY:
+        if not is_llm_available():
             reply = (
                 "Hi! I'm Aria from AutoStream. "
-                "(API key not set — running in demo mode.)"
+                "(No LLM backend configured — running in demo mode.)"
             )
         else:
             system = _build_aria_system(state)
@@ -345,8 +338,8 @@ def collect_lead_node(state: AgentState) -> dict:
     lead_info: LeadInfo = dict(state["lead_info"])   # mutable copy
     messages = list(state["messages"])
 
-    # Try fast regex first, fall back to LLM if API key available
-    if ANTHROPIC_API_KEY:
+    # Try LLM extraction first (smarter partial recovery), fall back to regex.
+    if is_llm_available():
         extracted = _extract_fields_llm(message, state.get("awaiting_field", "name"))
     else:
         extracted = _extract_fields_regex(message)
