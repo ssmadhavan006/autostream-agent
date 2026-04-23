@@ -90,6 +90,7 @@ Lead Info     : {lead_info}
 
 
 def _build_aria_system(state: AgentState) -> str:
+    """Build the fully-populated Aria system prompt from the current AgentState."""
     lead_info = state["lead_info"]
     return _ARIA_SYSTEM.format(
         intent=state["current_intent"].value,
@@ -180,7 +181,7 @@ def retrieve_context_node(state: AgentState) -> dict:
         store = _get_store()
         results = retrieve(message, k=RAG_TOP_K, store=store)
     except Exception as exc:
-        print(f"[nodes] RAG retrieval error: {exc}")
+        logger.error("RAG retrieval error: %s", exc)
         return {"rag_context": ""}
 
     if isinstance(results, NoInfoSignal):
@@ -306,7 +307,7 @@ def _extract_fields_llm(user_message: str, awaiting_field: str) -> Dict[str, Opt
                 "platform": data.get("platform") or None,
             }
     except Exception as exc:
-        print(f"[nodes] LLM field extraction failed: {exc}")
+        logger.warning("LLM field extraction failed, falling back to regex: %s", exc)
 
     # Fallback to regex if LLM call fails
     return _extract_fields_regex(user_message)
@@ -353,9 +354,6 @@ def collect_lead_node(state: AgentState) -> dict:
     # ── Email validation guard ────────────────────────────────────────────────
     # If an email was extracted but is invalid, reject it and re-ask.
     if extracted.get("email") and not validate_email(extracted["email"]):
-        print(
-            f"[nodes] collect_lead: invalid email rejected: {extracted['email']!r}"
-        )
         logger.warning("Invalid email submitted: %r — asking again.", extracted["email"])
         extracted["email"] = None   # discard bad value
         # Inject polite re-ask as the next assistant message
@@ -373,11 +371,7 @@ def collect_lead_node(state: AgentState) -> dict:
 
     # Determine which field to ask for next
     next_field = _next_missing_field(lead_info)
-
-    print(
-        f"[nodes] collect_lead: extracted={extracted}, "
-        f"lead_info={lead_info}, next={next_field}"
-    )
+    logger.debug("collect_lead: extracted=%s lead_info=%s next=%s", extracted, lead_info, next_field)
 
     return {
         "messages": messages,
@@ -416,10 +410,6 @@ def capture_lead_node(state: AgentState) -> dict:
             "lead_info=%s  awaiting_field=%s",
             lead, state.get("awaiting_field"),
         )
-        print(
-            "[nodes] WARNING: capture_lead_node called with incomplete lead_info. "
-            f"lead={lead}"
-        )
     assert all_fields_present, (
         "Tool called prematurely — all fields must be collected first. "
         f"Missing: {[f for f in ('name','email','platform') if not lead.get(f)]}"
@@ -447,9 +437,7 @@ def capture_lead_node(state: AgentState) -> dict:
 
     except ValueError as exc:
         logger.error("[capture_lead_node] Validation error: %s", exc)
-        print(f"[nodes] Lead capture validation error: {exc}")
         return {}   # Continue without marking captured; let generate_response handle it
     except Exception as exc:
         logger.exception("[capture_lead_node] Unexpected error: %s", exc)
-        print(f"[nodes] Lead capture unexpected error: {exc}")
         return {}
