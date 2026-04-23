@@ -1,10 +1,52 @@
-langchain==0.2.*
-langchain-anthropic==0.1.*
-langchain-community==0.2.*
-langgraph==0.1.*
-faiss-cpu>=1.8.0
-sentence-transformers==3.*
-rich==13.*
-python-dotenv==1.*
-pydantic==2.*
-pytest==8.*
+# AutoStream Agent — frozen dependencies
+# Generated: 2026-04-22
+# Python 3.11+
+#
+# Core agent stack
+langchain==0.2.17
+langchain-anthropic==0.1.23
+langchain-community==0.2.19
+langchain-core==0.2.43
+langchain-text-splitters==0.2.4
+langgraph==0.1.19
+langsmith==0.1.147
+
+# LLM provider
+anthropic==0.96.0
+
+# RAG / embeddings
+faiss-cpu==1.13.2
+sentence-transformers==3.4.1
+transformers==4.57.6
+tokenizers==0.22.2
+huggingface_hub==0.36.2
+torch==2.11.0
+safetensors==0.7.0
+
+# Vector math / ML
+numpy==1.26.4
+scikit-learn==1.8.0
+scipy==1.17.1
+
+# Terminal UI
+rich==13.9.4
+colorama==0.4.6
+
+# Config / env
+python-dotenv==1.2.2
+pydantic==2.13.3
+pydantic_core==2.46.3
+
+# Networking
+requests==2.33.1
+httpx==0.28.1
+aiohttp==3.13.5
+
+# Testing
+pytest==8.4.2
+
+# Utilities
+PyYAML==6.0.3
+tqdm==4.67.3
+tenacity==8.5.0
+regex==2026.4.4
