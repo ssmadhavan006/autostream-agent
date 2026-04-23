@@ -51,6 +51,7 @@ if str(_ROOT) not in sys.path:
 
 from agent.graph import run_turn
 from agent.intent import Intent
+from agent.llm_factory import is_llm_available, llm_backend_label
 from agent.state import AgentState, initial_state
 
 # ─── Theme ────────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ def _print_banner() -> None:
     console.print()
     console.print(
         Align.center(
-            Text("Powered by Claude · LangGraph · FAISS RAG", style="dim cyan")
+            Text(f"Powered by {llm_backend_label()} · LangGraph · FAISS RAG", style="dim cyan")
         )
     )
     console.print()
@@ -401,6 +402,31 @@ def run_cli() -> None:
     )
     console.print()
 
+    # ── Ollama connectivity pre-flight check ───────────────────────────────────
+    from config.settings import LLM_BACKEND, OLLAMA_BASE_URL, OLLAMA_MODEL
+    if LLM_BACKEND == "ollama":
+        import urllib.request, urllib.error
+        try:
+            urllib.request.urlopen(OLLAMA_BASE_URL, timeout=2)
+        except urllib.error.URLError:
+            console.print(
+                Panel(
+                    Text.from_markup(
+                        f"[bold red]⚠  Ollama is not running![/]\n\n"
+                        f"The agent needs Ollama to be running on [bold cyan]{OLLAMA_BASE_URL}[/].\n\n"
+                        f"[bold white]Fix:[/] Open a [bold yellow]new terminal[/] and run:\n"
+                        f"  [bold bright_green]ollama serve[/]\n\n"
+                        f"Then come back here and start the CLI again.\n"
+                        f"[dim](Model: {OLLAMA_MODEL})[/]"
+                    ),
+                    title="[bold red]Connection Error[/]",
+                    border_style="red",
+                    padding=(1, 2),
+                )
+            )
+            console.print()
+            return
+
     while True:
         # ── Get user input ────────────────────────────────────────────────────
         user_text = _get_user_input().strip()
@@ -432,6 +458,25 @@ def run_cli() -> None:
             )
             break
         except Exception as exc:                        # noqa: BLE001
+            # ── Friendly Ollama connection-refused handler ─────────────────────
+            exc_str = str(exc)
+            if "10061" in exc_str or "Connection refused" in exc_str or "actively refused" in exc_str or "Failed to establish" in exc_str:
+                from config.settings import OLLAMA_BASE_URL, OLLAMA_MODEL
+                console.print(
+                    Panel(
+                        Text.from_markup(
+                            f"[bold red]⚠  Cannot reach Ollama[/]\n\n"
+                            f"Ollama stopped or isn't running on [bold cyan]{OLLAMA_BASE_URL}[/].\n\n"
+                            f"[bold white]Fix:[/] Open a new terminal and run:\n"
+                            f"  [bold bright_green]ollama serve[/]\n\n"
+                            f"Then type [bold yellow]exit[/] here and restart the CLI."
+                        ),
+                        title="[bold red]Ollama Offline[/]",
+                        border_style="red",
+                        padding=(1, 2),
+                    )
+                )
+                break
             console.print(
                 Panel(
                     Text(f"⚠  Unexpected error: {exc}", style="bold red"),

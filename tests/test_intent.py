@@ -265,8 +265,9 @@ def test_prompt_no_history():
 # ─── Test 10: classify_intent raises without API key ──────────────────────────
 
 def test_classify_raises_without_api_key():
-    """classify_intent must raise EnvironmentError if no API key is set."""
-    with patch("agent.intent.ANTHROPIC_API_KEY", ""):
+    """classify_intent must raise EnvironmentError if backend is 'anthropic' and no key set."""
+    with patch("agent.intent.LLM_BACKEND", "anthropic"), \
+         patch("agent.intent.ANTHROPIC_API_KEY", ""):
         with pytest.raises(EnvironmentError, match="ANTHROPIC_API_KEY"):
             classify_intent("Hello!")
 
